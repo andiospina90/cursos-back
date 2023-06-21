@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\course;
+use App\Models\Course;
 use App\Models\User;
 use GuzzleHttp\Psr7\Response;
 use Illuminate\Http\Request;
@@ -19,7 +19,7 @@ class CourseController extends Controller
     public function index()
     {
 
-        return response()->json(course::all(), 200);
+        return response()->json(Course::all(), 200);
     }
 
     /**
@@ -104,7 +104,7 @@ class CourseController extends Controller
      */
     public function update(Request $request, course $course)
     {
-
+       
         try {
             $validate = Validator::make($request->all(), [
                 'course_name' => 'required',
@@ -149,6 +149,7 @@ class CourseController extends Controller
     {
         try {
             $course->delete();
+            DB::table('course_student')->where('course_id', $course->id)->delete();
             return response()->json([
                 'message' => 'Course deleted successfully',
                 'status' => 'success',
@@ -172,17 +173,17 @@ class CourseController extends Controller
             
             if($check){
                 return response()->json([
-                    'message' => 'Student already registered for course',
+                    'message' => 'El estudiante ya se encuentra registrado en el curso',
                     'status' => 'failed',
                     'code' => 400
-                ], 400);
+                ], 200);
             }
 
             $course->students()->attach($student->id);
 
             
             return response()->json([
-                'message' => 'Student added to course successfully',
+                'message' => 'Se a agregado correctamente el estudiante al curso',
                 'status' => 'success',
                 'code' => 200
             ], 200);
@@ -197,7 +198,7 @@ class CourseController extends Controller
         }
     }
 
-    public function removeStudent(Request $request, course $course, User $student)
+    public function removeStudent(Request $request, User $student, course $course )
     {
         try {
 
@@ -267,6 +268,35 @@ class CourseController extends Controller
                 'status' => 'success',
                 'code' => 200,
                 'data' => $enrrolledStuednts
+            ], 200);
+
+        } catch (\Throwable $th) {
+            return response()->json([
+                'message' => 'Courses fetch failed',
+                'status' => 'failed',
+                'code' => 400,
+                'data' => $th->getMessage()
+            ], 400);
+        }
+    }
+
+    public function getTopThreeCourses(){
+        try {
+
+            $topThreeCourses = DB::table('course_student')
+            ->join('courses', 'courses.id', '=', 'course_student.course_id')
+            ->join('users', 'users.id', '=', 'course_student.student_id')
+            ->select(   'courses.course_name', DB::raw('count(*) as total'))
+            ->groupBy('courses.course_name')
+            ->orderBy('total', 'desc')
+            ->take(3)
+            ->get();
+
+            return response()->json([
+                'message' => 'Courses fetched successfully',
+                'status' => 'success',
+                'code' => 200,
+                'data' => $topThreeCourses
             ], 200);
 
         } catch (\Throwable $th) {

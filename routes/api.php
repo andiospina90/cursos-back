@@ -25,13 +25,13 @@ Route::controller(CourseController::class)->group(function(){
     Route::get('/courses', 'index');
     Route::post('/course', 'store');
     Route::get('/course/{course}', 'show');
-    Route::put('/course/{course}', 'update');
+    Route::post('/course/{course}', 'update');
     Route::delete('/course/{course}', 'destroy');
     Route::post('/course/{course}/student/{student}', 'addStudent');
     Route::delete('/student/{student}/course/{course}', 'removeStudent');
     Route::get('/student/{student}/courses', 'getCourseByStudent');
     Route::get('/students/courses', 'getStudentsCourses');
-    Route::get('');
+    Route::get('top/trhee/courses', 'getTopThreeCourses');
 });
 
 Route::controller(UserController::class)->group(function(){
